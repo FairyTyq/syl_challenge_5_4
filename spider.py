@@ -12,7 +12,7 @@ import async_timeout
 from scrapy.http import HtmlResponse
 
 # 输出的结果保存到 result 列表中，每个元素都是一个二元组(name,update_time)
-result = []
+results = []
 
 # 定义获取网页内容的异步操作，注意定义的方式
 async def fetch(session,url):
@@ -23,23 +23,27 @@ async def fetch(session,url):
 # 定义提取网页数据的函数
 def parse(url,body):
     # 1. 构建 HtmlResponse 对象
+    response = HtmlResponse(url=url,body=body)
     # 2. 使用 xpath 获取仓库的 name 和 update_time 数据
+    for info in response.css('div#user-repositories-list li'):
+        name = info.xpath('.//a[contains(@itemprop,"name codeRepository")]/text()').re_first('[\w-]+')
+        update_time = info.xpath('.//relative-time/@datetime').extract_first()
     # 3. 将提取的数据存入 results:results.append((name,update_time))
-    pass
+        results.append((name,update_time))
 
 # 定义异步任务执行
 async def task(url):
-    async with aiohttp.ClientSeesion() as session:
+    async with aiohttp.ClientSession() as session:
         # 调用 fetch 获取 HTML 页面
-        TODO
+        html = await fetch(session,url)
         # 调用 parse 解析页面并将获得的数据存入 results
-        TODO
+        parse(url,html.encode('utf8'))
 
 # 主函数
 def main():
     loop = asyncio.get_event_loop()
     url_template = 'https://github.com/shiyanlou?page={}&tab=repositories'
-    tasks = [task(ur_template.format(i)) for i in range(1,5)]
+    tasks = [task(url_template.format(i)) for i in range(1,5)]
     loop.run_until_complete(asyncio.gather(*tasks))
     with open('/home/shiyanlou/shiyanlou-repos.csv','w',newline='') as f:
         writer = csv.writer(f)
