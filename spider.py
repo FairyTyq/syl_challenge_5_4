@@ -1,45 +1,45 @@
 # coding:utf-8
 
-# Ê¹ÓÃ csv Ä£¿éÀ´±£´æÎÄ¼ş
+# ä½¿ç”¨ csv æ¨¡å—æ¥ä¿å­˜æ–‡ä»¶
 import csv
-# Ê¹ÓÃ asyncion ¿âÀ´ÊµÏÖÒì²½±à³Ì
+# ä½¿ç”¨ asyncion åº“æ¥å®ç°å¼‚æ­¥ç¼–ç¨‹
 import asyncio
-# Ê¹ÓÃ aiohttp ¿âÊµÏÖÍøÂçÇëÇó
+# ä½¿ç”¨ aiohttp åº“å®ç°ç½‘ç»œè¯·æ±‚
 import aiohttp
-# ÉèÖÃÒì²½±à³ÌÖĞµÄ³¬Ê±
+# è®¾ç½®å¼‚æ­¥ç¼–ç¨‹ä¸­çš„è¶…æ—¶
 import async_timeout
-# Ê¹ÓÃ scrapy ÖĞµÄ HtmlResponse ¹¹½¨²¢ÇÒ½âÎöÒ³ÃæÄÚÈİ
+# ä½¿ç”¨ scrapy ä¸­çš„ HtmlResponse æ„å»ºå¹¶ä¸”è§£æé¡µé¢å†…å®¹
 from scrapy.http import HtmlResponse
 
-# Êä³öµÄ½á¹û±£´æµ½ result ÁĞ±íÖĞ£¬Ã¿¸öÔªËØ¶¼ÊÇÒ»¸ö¶şÔª×é(name,update_time)
+# è¾“å‡ºçš„ç»“æœä¿å­˜åˆ° result åˆ—è¡¨ä¸­ï¼Œæ¯ä¸ªå…ƒç´ éƒ½æ˜¯ä¸€ä¸ªäºŒå…ƒç»„(name,update_time)
 results = []
 
-# ¶¨Òå»ñÈ¡ÍøÒ³ÄÚÈİµÄÒì²½²Ù×÷£¬×¢Òâ¶¨ÒåµÄ·½Ê½
+# å®šä¹‰è·å–ç½‘é¡µå†…å®¹çš„å¼‚æ­¥æ“ä½œï¼Œæ³¨æ„å®šä¹‰çš„æ–¹å¼
 async def fetch(session,url):
     with async_timeout.timeout(10):
         async with session.get(url) as response:
             return await response.text()
 
-# ¶¨ÒåÌáÈ¡ÍøÒ³Êı¾İµÄº¯Êı
+# å®šä¹‰æå–ç½‘é¡µæ•°æ®çš„å‡½æ•°
 def parse(url,body):
-    # 1. ¹¹½¨ HtmlResponse ¶ÔÏó
+    # 1. æ„å»º HtmlResponse å¯¹è±¡
     response = HtmlResponse(url=url,body=body)
-    # 2. Ê¹ÓÃ xpath »ñÈ¡²Ö¿âµÄ name ºÍ update_time Êı¾İ
+    # 2. ä½¿ç”¨ xpath è·å–ä»“åº“çš„ name å’Œ update_time æ•°æ®
     for info in response.css('div#user-repositories-list li'):
         name = info.xpath('.//a[contains(@itemprop,"name codeRepository")]/text()').re_first('[\w-]+')
         update_time = info.xpath('.//relative-time/@datetime').extract_first()
-    # 3. ½«ÌáÈ¡µÄÊı¾İ´æÈë results:results.append((name,update_time))
+    # 3. å°†æå–çš„æ•°æ®å­˜å…¥ results:results.append((name,update_time))
         results.append((name,update_time))
 
-# ¶¨ÒåÒì²½ÈÎÎñÖ´ĞĞ
+# å®šä¹‰å¼‚æ­¥ä»»åŠ¡æ‰§è¡Œ
 async def task(url):
     async with aiohttp.ClientSession() as session:
-        # µ÷ÓÃ fetch »ñÈ¡ HTML Ò³Ãæ
+        # è°ƒç”¨ fetch è·å– HTML é¡µé¢
         html = await fetch(session,url)
-        # µ÷ÓÃ parse ½âÎöÒ³Ãæ²¢½«»ñµÃµÄÊı¾İ´æÈë results
+        # è°ƒç”¨ parse è§£æé¡µé¢å¹¶å°†è·å¾—çš„æ•°æ®å­˜å…¥ results
         parse(url,html.encode('utf8'))
 
-# Ö÷º¯Êı
+# ä¸»å‡½æ•°
 def main():
     loop = asyncio.get_event_loop()
     url_template = 'https://github.com/shiyanlou?page={}&tab=repositories'
@@ -51,17 +51,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
